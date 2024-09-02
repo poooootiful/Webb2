@@ -26,25 +26,26 @@ public class Functions {
         }
         return id;
     }
-    public static List<String> getCourseInfo (int courseId) {
-        List<String> CourseInfo = new ArrayList<>();
-
-        String sql = "SELECT * FROM courses WHERE id = "+courseId+";";
+    public static int getStudentId (String fName, String lName) {
+        String StudentIdSql = "SELECT id from students WHERE Fname = \""+fName+"\" AND Lname = \""+lName+"\";";
+        int studentId = 0;
         Connection connection = DatabaseConnect.getConnection();
+
 
         try {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
-
-            CourseInfo.add(resultSet.getString("Name"));
-            CourseInfo.add(resultSet.getString("Yhp"));
-            CourseInfo.add(resultSet.getString("Description"));
+            ResultSet resultSet = statement.executeQuery(StudentIdSql);
+            while (resultSet.next()) {
+                studentId = resultSet.getInt("id");
+            }
+            connection.close();
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
-        }
+        };
 
-        return CourseInfo;
+        return studentId;
+
     }
 
 

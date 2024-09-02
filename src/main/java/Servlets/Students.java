@@ -90,77 +90,87 @@ public class Students extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse response) throws ServletException, IOException {
         String FName = req.getParameter("Fname");
         String LName = req.getParameter("Lname");
-        String StudentIdSql = "SELECT id from students WHERE Fname = \""+FName+"\" AND Lname = \""+LName+"\";";
-        int studentid = 0;
+
+        int studentId = Functions.getStudentId(FName,LName);
+
 
         //Make a veriable for printing out html
         PrintWriter out = response.getWriter();
+        out.println("<html>");
+        out.println("<head><title>Students</title></head>");
+        out.println("<body style=\"background-color:Gray;\">");
+        out.println("<h2>Students</h2>");
+        out.println("<ul>\n" +
+                "        <li style=\"display:inline\"><a href=\"/Home\">Home</a></li>\n" +
+                "        <li style=\"display:inline\"><a href=\"/Students\">Students</a></li>\n" +
+                "        <li style=\"display:inline\"><a href=\"/AddStudent\">AddStudent</a></li>\n" +
+                "        <li style=\"display:inline\"><a href=\"/AddCourse\">AddCourse</a></li>\n" +
+                "        <li style=\"display:inline\"><a href=\"/Atendance\">Atendance</a></li>"+
+                "    </ul>");
 
-
-        try {
-            Connection con = DatabaseConnect.getConnection();
-            Statement statement = con.createStatement();
-            ResultSet resultSet = statement.executeQuery(StudentIdSql);
-
-            while (resultSet.next()) {
-                studentid = Functions.getCoursesId(resultSet.getInt("id"));
-            }
-            con.close();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-        List<Integer> courseIds = new ArrayList<>();
-        String courseIdsSql = "SELECT * FROM atendance WHERE StudentID = "+studentid+";";
-        try {
-            Connection con = DatabaseConnect.getConnection();
-            Statement statement = con.createStatement();
-            ResultSet resultSet = statement.executeQuery(courseIdsSql);
-
-            while (resultSet.next()) {
-                int courseid = resultSet.getInt("CourseID");
-                courseIds.add(courseid);
-            }
-            con.close();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-        int length = courseIds.size();
-
-        for (int i=0; length>i ;i++) {
-            int courseId = courseIds.get(i);
-            courseIds.remove(1);
-            String courseSql = "SELECT * FROM courses WHERE id = "+courseId+";";
-
-            out.println("<table style = \"border: 1px solid\">\n" +
-                    "  <tr>\n" +
-                    "    <th style = \"border: 1px solid\">Id</th>\n" +
-                    "    <th style = \"border: 1px solid\">Name</th>\n" +
-                    "    <th style = \"border: 1px solid\">Yhp</th>\n" +
-                    "    <th style = \"border: 1px solid\">Description</th>\n" +
-                    "  </tr>\n");
+        if (studentId>0) {
+            out.println("<h3>All Courses for the student you searched</h3>");
+            String sql = "SELECT * FROM atendance WHERE StudentID = "+studentId+";";
+            Connection connection = DatabaseConnect.getConnection();
 
             try {
-                Connection con = DatabaseConnect.getConnection();
-                Statement statement = con.createStatement();
-                ResultSet resultSet = statement.executeQuery(courseSql);
+                Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery(sql);
+                out.println("<table style = \"border: 1px solid\">\n" +
+                        "  <tr>\n" +
+                        "    <th style = \"border: 1px solid\">CourseID</th>\n" +
+                        "    <th style = \"border: 1px solid\">StudentID</th>\n" +
+                        "  </tr>\n");
 
                 while (resultSet.next()) {
                     out.println(("  <tr>\n" +
-                            "    <td style = \"border: 1px solid\">" + resultSet.getInt("id") + "</td>\n" +
-                            "    <td style = \"border: 1px solid\">" + resultSet.getString("Name") + "</td>\n" +
-                            "    <td style = \"border: 1px solid\">" + resultSet.getString("Yhp") + "</td>\n" +
-                            "    <td style = \"border: 1px solid\">" + resultSet.getString("Description") + "</td>\n" +
+                            "    <td style = \"border: 1px solid\">" + resultSet.getInt("CourseID") + "</td>\n" +
+                            "    <td style = \"border: 1px solid\">" + resultSet.getInt("StudentID") + "</td>\n" +
                             "  </tr>\n"));
                 }
-                con.close();
+                connection.close();
+
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            //Closing tags for table
+            out.println("</table>");
+
+        }
+        if (studentId>0) {
+            out.println("<h3>All Courses with id and name</h3>");
+            String CoursesSql = "SELECT id, Name FROM courses;";
+            Connection connection = DatabaseConnect.getConnection();
+            out.println("<table style = \"border: 1px solid\">\n" +
+                    "  <tr>\n" +
+                    "    <th style = \"border: 1px solid\">CourseID</th>\n" +
+                    "    <th style = \"border: 1px solid\">Name</th>\n" +
+                    "  </tr>\n");
+
+            try {
+                Statement statement = connection.createStatement();
+                ResultSet courseResult = statement.executeQuery(CoursesSql);
+
+
+                while (courseResult.next()) {
+                    out.println(("  <tr>\n" +
+                                "    <td style = \"border: 1px solid\">" + courseResult.getInt("id") + "</td>\n" +
+                                "    <td style = \"border: 1px solid\">" + courseResult.getString("Name") + "</td>\n" +
+                                "  </tr>\n"));
+
+                }
+                connection.close();
+
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
 
+            //Closing tags for table
+            out.println("</table>");
         }
 
+        out.println("</body>");
+        out.println("</html>");
 
 
     }
